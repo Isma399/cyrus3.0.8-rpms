@@ -1,0 +1,25 @@
+diff --git a/imap/cyr_virusscan.c b/imap/cyr_virusscan.c
+index 863a858..b6c8980 100644
+--- a/imap/cyr_virusscan.c
++++ b/imap/cyr_virusscan.c
+@@ -192,9 +192,19 @@ int clamav_scanfile(void *state, const char *fname,
+     struct clamav_state *st = (struct clamav_state *) state;
+     int r;
+ 
+-    /* scan file */
++#ifndef CL_SCAN_ARCHIVE /* clamav >= 0.101 */
++    struct cl_scan_options options;
++    memset(&options, 0, sizeof(struct cl_scan_options));
++    options.parse |= ~0; /* enable all parsers */
++    options.general |= CL_SCAN_GENERAL_HEURISTICS; /* enable heuristic alert options */
++
++    r = cl_scanfile(fname, virname, NULL, st->av_engine,
++                    &options);
++
++#else
+     r = cl_scanfile(fname, virname, NULL, st->av_engine,
+                     CL_SCAN_STDOPT);
++#endif
+ 
+     switch (r) {
+     case CL_CLEAN:
